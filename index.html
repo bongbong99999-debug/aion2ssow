@@ -397,7 +397,7 @@ footer{text-align:center;margin-top:30px;font-size:11px;color:var(--gold-dim);le
 const M=[
  ["atk","공격력",13538,1],
  ["pen","관통",2560,10],
- ["critStat","치명타 공격력",1326,1],
+ ["critStat","치명타 수치",1326,1],
  ["amp","피해 증폭 %",62.5,0.1],
  ["wAmp","무기 피해 증폭 %",68.7,0.1],
  ["critAmp","치명타 피해 증폭 %",40.8,0.1],
@@ -882,7 +882,7 @@ function renderEff(hostId,s,baseResult,critMode){
  const tests=[
   ["전방 피해 증폭 +1%p","frontAmp",1],["후방 피해 증폭 +1%p","backAmp",1],["피해 증폭 +1%p","amp",1],
   ["강타 +1%p","smite",1],["치명타 피해 증폭 +1%p","critAmp",1],["무기 피해 증폭 +1%p","wAmp",1],
-  ["다단 히트 적중 +1%p","multi",1],["치명타 공격력 +100","critStat",100],["관통 +100","pen",100]
+  ["다단 히트 적중 +1%p","multi",1],["치명타 수치 +100","critStat",100],["관통 +100","pen",100]
  ];
  const rows=tests.map(([label,key,d])=>{
   const s2=Object.assign({},s);s2[key]=s[key]+d;
