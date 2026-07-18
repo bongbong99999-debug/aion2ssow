@@ -34,7 +34,7 @@ select:focus{outline:none;border-color:var(--gold-dim)}
 .f label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
 .f input{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-size:13px;font-family:inherit}
 .f input:focus{outline:none;border-color:var(--gold-dim)}
-.results{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.results{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
 @media(max-width:720px){.results{grid-template-columns:1fr}}
 .card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:10px;padding:16px;text-align:center}
 .card .lbl{font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:4px}
@@ -121,7 +121,8 @@ footer{text-align:center;margin-top:30px;font-size:11px;color:var(--gold-dim);le
 <div class="results">
   <div class="card"><div class="lbl">기대 데미지 (1히트)</div><div class="val" id="outDmg">—</div><div class="sub">치명·강타·다단 기대값 포함</div></div>
   <div class="card"><div class="lbl">총 배율</div><div class="val" id="outMult">—</div><div class="sub">기본 데미지에 곱해지는 값</div></div>
-  <div class="card"><div class="lbl">기본 데미지</div><div class="val" id="outBase">—</div><div class="sub">공격력·계수·관통 반영, 배율 전</div></div>
+  <div class="card"><div class="lbl">기본 데미지</div><div class="val" id="outBase">—</div><div class="sub">공격력·스킬계수·관통 반영</div></div>
+  <div class="card"><div class="lbl">추정 치명타 확률</div><div class="val" id="outCrit">—</div><div class="sub">치명타−치명타 저항 기반 연구식 추정</div></div>
 </div>
 
 <div class="panel eff">
@@ -197,14 +198,15 @@ footer{text-align:center;margin-top:30px;font-size:11px;color:var(--gold-dim);le
 <div class="notes">
   <b>계산 방식</b> — 커뮤니티 실측 연구 기반.
   피해 증폭·PVE 피증·보스 피증은 하나로 합산 후 상대 피해 내성을 뺀 값이 곱해지고,
-  전방·후방 피증은 방향 판정에 따라 하나만 적용되는 독립 곱연산, 무기 피증은 실효 0.66배(상대 무피 내성 차감), 치명타는 기본 150%에 치피증 합산(상대 치피 내성 차감),
+  전방·후방 피증은 방향 판정에 따라 하나만 적용되는 독립 곱연산, 무기 피증은 실효 0.66배(상대 무피 내성 차감), 치명타 피해는 기본 150%에 치피증을 합산하고 상대 치피 내성을 차감해 계산합니다.
+  치명타 발생 확률은 <b>내 치명타 수치 − 상대 치명타 저항</b>을 유효 치명타 수치로 보고, 허수아비 실측값(1048→약56%, 1220→약80%, 1326→약90%)에 맞춘 커뮤니티 연구식으로 <b>추정</b>합니다. 보스·PvP 환경에서는 실제 확률과 차이가 날 수 있습니다.
   강타는 확률 2배, 다단 히트는 타당 5% 기대값으로 계산합니다.
-  스킬 계수는 실측 공식(공격력의 45% + 스킬별 추가 수치)에 따라 45%로 고정되어 있으며, 스킬마다 다른 부분은 "스킬 추가 피해"로 입력합니다.<br><br>
+  스킬 계수는 더 이상 45%로 고정하지 않고 <b>"스킬 공격력 계수 %"</b>를 직접 입력하도록 변경했습니다. 스킬별 고정 수치는 "스킬 추가 피해"에 입력합니다.<br><br>
   <b>보스 프리셋 근거</b> — 구 초월 4단 막보는 실측값(피해내성 44% · 치피내성 25% · 무피내성 15%).
   챕터1 신규 던전(타락한 데바의 성 · 심연의 뿔암굴)은 아직 정확한 실측치가 공개되지 않아,
   최근 보스에 무피·치피 내성이 붙기 시작한 추세를 반영한 <b>추정치</b>입니다. 실측 자료가 나오면 직접 수정해서 쓰세요.
-  스킬 계수·추가 피해는 스킬마다 다르므로 본인 주력기 기준으로 맞추고,
-  절대 수치보다는 <b>"뭘 올릴지" 비교용</b>으로 활용하세요.
+  스킬 계수·추가 피해는 스킬마다 다르므로 본인 주력기 툴팁/실측값 기준으로 직접 맞추고,
+  치명타 확률 역시 대상별 치명타 저항과 실험 오차가 있으므로 절대 수치보다는 <b>"뭘 올릴지" 비교용</b>으로 활용하세요.
 </div>
 
 <div class="notes sources">
@@ -212,6 +214,8 @@ footer{text-align:center;margin-top:30px;font-size:11px;color:var(--gold-dim);le
   <ul>
     <li><a href="https://www.inven.co.kr/board/aion2/6444/902" target="_blank">피해증폭/제작무기 효율/데미지 관련 공식 등 정리 (대만펌) — 인벤</a><br>
       <span class="src-desc">피증·PVE피증·보스피증 합연산, 후방(방향) 피증 독립 곱연산, 치피 합산, 강타 2배, 다단히트 타당 5%, 관통·방어력 /10, 완벽 효율 등 핵심 공식의 출처</span></li>
+    <li><a href="https://www.inven.co.kr/board/aion2/6444/909" target="_blank">스킬 대미지에 대한 실험과 분석 — 인벤</a><br>
+      <span class="src-desc">치명타 1048/1220/1326에서 약 56%/80%/90% 실측 및 허수아비 기반 치명타 확률 근사식 참고. 실제 보스·PvP에서는 치명타 저항 때문에 차이가 날 수 있습니다.</span></li>
     <li><a href="https://forum.gamer.com.tw/C.php?bsn=82913&amp;snA=2580" target="_blank">원본 연구글 1 — 대만 바하무트</a> ·
         <a href="https://forum.gamer.com.tw/C.php?bsn=82913&amp;snA=2948" target="_blank">원본 연구글 2</a> ·
         <a href="https://forum.gamer.com.tw/Co.php?bsn=82913&amp;sn=11552" target="_blank">원본 연구글 3</a><br>
@@ -269,22 +273,22 @@ const M=[
  ["atk","공격력",13538,1],["pen","관통",2560,10],
  ["amp","피해 증폭 %",62.5,0.1],["pveAmp","PVE 피증 %",71.8,0.1],["bossAmp","보스 피증 %",8.5,0.1],
  ["wAmp","무기 피증 %",68.7,0.1],
- ["critR","치명타 확률 %",90,1],["critAmp","치피증 %",40.8,0.1],
+ ["critStat","치명타 수치",1326,1],["critAmp","치피증 %",40.8,0.1],
  ["frontAmp","전방 피증 %",31.3,0.1],["backAmp","후방 피증 %",0.6,0.1],
  ["smite","강타 %",73.5,0.1],["multi","다단 히트 %",36,1],
- ["flat","스킬 추가 피해",1500,10]
+ ["skillCoef","스킬 공격력 계수 %",45,0.1],["flat","스킬 추가 피해",1500,10]
 ];
 const E=[
  ["eDef","방어력",40000,100],["eRes","피해 내성 %",50,0.1],
- ["eCritRes","치피 내성 %",25,0.1],["eWRes","무피 내성 %",20,0.1],
+ ["eCritStat","치명타 저항",0,1],["eCritRes","치피 내성 %",25,0.1],["eWRes","무피 내성 %",20,0.1],
  ["eFrontRes","전방 내성 %",0,0.1],["eBackRes","후방 내성 %",0,0.1],["eSmiteRes","강타 저항 %",20,0.1]
 ];
 const PRESETS={
- pvp:{eDef:54916,eRes:24.6,eCritRes:37.7,eWRes:10,eFrontRes:3.6,eBackRes:6.7,eSmiteRes:33,isPve:false},
- deva:{eDef:40000,eRes:50,eCritRes:25,eWRes:20,eFrontRes:0,eBackRes:0,eSmiteRes:20,isPve:true},
- horn:{eDef:45000,eRes:55,eCritRes:30,eWRes:25,eFrontRes:0,eBackRes:0,eSmiteRes:25,isPve:true},
- trans4:{eDef:30000,eRes:44,eCritRes:25,eWRes:15,eFrontRes:0,eBackRes:0,eSmiteRes:15,isPve:true},
- dummy:{eDef:5000,eRes:10,eCritRes:0,eWRes:0,eFrontRes:0,eBackRes:0,eSmiteRes:0,isPve:true}
+ pvp:{eDef:54916,eRes:24.6,eCritStat:0,eCritRes:37.7,eWRes:10,eFrontRes:3.6,eBackRes:6.7,eSmiteRes:33,isPve:false},
+ deva:{eDef:40000,eRes:50,eCritStat:0,eCritRes:25,eWRes:20,eFrontRes:0,eBackRes:0,eSmiteRes:20,isPve:true},
+ horn:{eDef:45000,eRes:55,eCritStat:0,eCritRes:30,eWRes:25,eFrontRes:0,eBackRes:0,eSmiteRes:25,isPve:true},
+ trans4:{eDef:30000,eRes:44,eCritStat:0,eCritRes:25,eWRes:15,eFrontRes:0,eBackRes:0,eSmiteRes:15,isPve:true},
+ dummy:{eDef:5000,eRes:10,eCritStat:0,eCritRes:0,eWRes:0,eFrontRes:0,eBackRes:0,eSmiteRes:0,isPve:true}
 };
 
 // 전투속도 캡 데이터
@@ -466,18 +470,28 @@ M.forEach(f=>field(document.getElementById("mine"),f));
 E.forEach(f=>field(document.getElementById("enemy"),f));
 const v=id=>parseFloat(document.getElementById(id).value)||0;
 
+function estimateCritRate(critStat,eCritStat){
+ // 허수아비 실측 1048≈56%, 1220≈80%, 1326≈90%에 맞춘 커뮤니티 근사식.
+ // 대상 치명타 저항은 공격자 치명타에서 감산한 뒤 적용합니다. 실제 보스/PvP는 오차가 있을 수 있습니다.
+ const effective=Math.max((critStat||0)-(eCritStat||0),0);
+ const p=1.0461/(1+Math.exp(-0.0060*(effective-1024.52)));
+ return Math.max(0,Math.min(p,1));
+}
+
 function calc(s){
- const base=Math.max(s.atk*0.45+s.flat-Math.max(s.eDef-s.pen,0)/10,1);
+ const coef=Math.max(s.skillCoef,0)/100;
+ const base=Math.max(s.atk*coef+s.flat-Math.max(s.eDef-s.pen,0)/10,1);
  const bucket=s.amp+(s.isPve?s.pveAmp+s.bossAmp:0)-s.eRes;
  const mAmp=Math.max(1+bucket/100,0.1);
  let mF=1;
  if(s.dir==="front")mF=Math.max(1+(s.frontAmp-s.eFrontRes)/100,1);
  else if(s.dir==="back")mF=Math.max(1+(s.backAmp-s.eBackRes)/100,1);
  const mW=1+Math.max(s.wAmp-s.eWRes,0)*0.66/100;
- const mC=1+Math.min(s.critR,100)/100*(0.5+(s.critAmp-s.eCritRes)/100);
+ const critRate=estimateCritRate(s.critStat,s.eCritStat);
+ const mC=1+critRate*(0.5+(s.critAmp-s.eCritRes)/100);
  const mS=1+Math.max(Math.min(s.smite-s.eSmiteRes,100),0)/100;
  const mM=1+Math.min(s.multi,100)/100*0.125;
- return{dmg:base*mAmp*mF*mW*mC*mS*mM,base:base,mult:mAmp*mF*mW*mC*mS*mM};
+ return{dmg:base*mAmp*mF*mW*mC*mS*mM,base:base,mult:mAmp*mF*mW*mC*mS*mM,critRate:critRate};
 }
 function snap(){
  const s={};M.concat(E).forEach(f=>s[f[0]]=v(f[0]));
@@ -490,11 +504,12 @@ function render(){
  document.getElementById("outDmg").textContent=Math.round(r.dmg).toLocaleString();
  document.getElementById("outBase").textContent=Math.round(r.base).toLocaleString();
  document.getElementById("outMult").textContent="\u00d7"+r.mult.toFixed(2);
+ document.getElementById("outCrit").textContent=(r.critRate*100).toFixed(1)+"%";
  document.getElementById("chkPveW").classList.toggle("on",s.isPve);
  const tests=[
   ["전방 피증 +1%p","frontAmp",1],["후방 피증 +1%p","backAmp",1],["피해 증폭 +1%p","amp",1],
   ["강타 +1%p","smite",1],["치피증 +1%p","critAmp",1],["무기 피증 +1%p","wAmp",1],
-  ["다단 히트 +1%p","multi",1],["관통 +100","pen",100]
+  ["다단 히트 +1%p","multi",1],["치명타 +100","critStat",100],["관통 +100","pen",100]
  ];
  const rows=tests.map(([label,key,d])=>{
   const s2=Object.assign({},s);s2[key]=s[key]+d;
