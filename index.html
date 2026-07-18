@@ -23,6 +23,35 @@ h1 span{font-family:'Noto Sans KR';font-size:15px;letter-spacing:1px;color:var(-
 .save-btn{background:none;border:1px solid var(--gold-dim);color:var(--gold);border-radius:6px;padding:8px 12px;font-size:12px;cursor:pointer;font-family:inherit}
 .save-btn:hover{background:rgba(201,162,107,.08)}
 .save-status{font-size:11px;color:var(--muted);min-width:86px}
+.compare-panel{margin-bottom:18px}
+.compare-slot-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.compare-slot{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:12px}
+.compare-slot h3{font-size:14px;margin:0 0 8px;color:var(--text)}
+.compare-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.compare-btn{background:none;border:1px solid var(--gold-dim);color:var(--gold);border-radius:6px;padding:7px 11px;font-size:12px;cursor:pointer;font-family:inherit}
+.compare-btn:hover{background:rgba(201,162,107,.08)}
+.compare-btn.primary{background:var(--gold-dim);color:#0b0e14;font-weight:700}
+.compare-saved{font-size:11px;color:var(--muted);margin-top:8px;min-height:16px}
+.compare-main-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.compare-result{display:none;margin-top:14px;border-top:1px solid var(--line);padding-top:14px}
+.compare-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.compare-card{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:12px}
+.compare-card .title{font-size:12px;color:var(--muted);margin-bottom:6px}
+.compare-card .numbers{font-size:16px;font-weight:700}
+.compare-card .gain{margin-top:5px;font-size:13px}
+.compare-card .gain.up{color:var(--green)}
+.compare-card .gain.down{color:#ef7b7b}
+.compare-card .gain.same{color:var(--muted)}
+.compare-changes{margin-top:12px}
+.compare-change-row{display:grid;grid-template-columns:minmax(130px,1.2fr) 1fr 1fr .8fr;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px;align-items:center}
+.compare-change-row.head{color:var(--muted);font-size:11px}
+.compare-change-row .delta.up{color:var(--green)}
+.compare-change-row .delta.down{color:#ef7b7b}
+@media(max-width:720px){
+ .compare-slot-grid,.compare-summary{grid-template-columns:1fr}
+ .compare-change-row{grid-template-columns:1.4fr .9fr .9fr .8fr;font-size:11px;gap:5px}
+}
+
 select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:8px 12px;font-family:inherit;font-size:13px}
 select:focus{outline:none;border-color:var(--gold-dim)}
 .chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;user-select:none;
@@ -149,6 +178,38 @@ footer{text-align:center;margin-top:30px;font-size:11px;color:var(--gold-dim);le
 <div class="grid2">
   <div class="panel"><h2>내 스탯</h2><div class="fields" id="mine"></div></div>
   <div class="panel"><h2>상대 스탯</h2><div class="fields" id="enemy"></div></div>
+</div>
+
+
+<div class="panel compare-panel">
+  <h2>내 스탯 1번 ↔ 2번 비교</h2>
+  <div class="desc" style="font-size:12px;color:var(--muted)">
+    현재 내 스탯을 1번/2번에 각각 저장해 두고 바로 비교합니다. 예: 피해 증폭을 낮추고 강타를 올린 세팅 비교.
+    <b style="color:var(--text)">상대 스탯·전후방 비율·PvE 설정은 현재 화면 값을 두 세팅에 동일하게 적용</b>합니다.
+  </div>
+  <div class="compare-slot-grid">
+    <div class="compare-slot">
+      <h3>1번 스탯</h3>
+      <div class="compare-actions">
+        <button id="saveCompare1" class="compare-btn primary">현재값 1번 저장</button>
+        <button id="loadCompare1" class="compare-btn">1번 불러오기</button>
+      </div>
+      <div id="compareStatus1" class="compare-saved">저장값 없음</div>
+    </div>
+    <div class="compare-slot">
+      <h3>2번 스탯</h3>
+      <div class="compare-actions">
+        <button id="saveCompare2" class="compare-btn primary">현재값 2번 저장</button>
+        <button id="loadCompare2" class="compare-btn">2번 불러오기</button>
+      </div>
+      <div id="compareStatus2" class="compare-saved">저장값 없음</div>
+    </div>
+  </div>
+  <div class="compare-main-actions">
+    <button id="compareSlots" class="compare-btn primary">1번 ↔ 2번 비교하기</button>
+    <span id="compareHint" style="font-size:11px;color:var(--muted)">같은 브라우저/기기에 저장됩니다.</span>
+  </div>
+  <div id="compareResult" class="compare-result"></div>
 </div>
 
 <div class="results shared-result">
@@ -545,6 +606,158 @@ E.forEach(f=>field(document.getElementById("enemy"),f));
 const v=id=>parseFloat(document.getElementById(id).value)||0;
 
 const MY_STATS_STORAGE_KEY="aion2_my_stats_v1";
+const COMPARE_SLOT_KEYS={
+  1:"aion2_compare_slot_1_v1",
+  2:"aion2_compare_slot_2_v1"
+};
+
+function collectCompareMine(){
+ const mine={};
+ M.forEach(f=>{
+  const el=document.getElementById(f[0]);
+  if(el)mine[f[0]]=el.value;
+ });
+ return {mine:mine,savedAt:Date.now()};
+}
+
+function getCompareSlot(slot){
+ try{
+  const raw=localStorage.getItem(COMPARE_SLOT_KEYS[slot]);
+  return raw?JSON.parse(raw):null;
+ }catch(e){
+  return null;
+ }
+}
+
+function fmtSavedTime(ts){
+ if(!ts)return "저장됨";
+ const d=new Date(ts);
+ return "저장됨 · "+String(d.getMonth()+1).padStart(2,"0")+"/"+String(d.getDate()).padStart(2,"0")+" "+
+        String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+}
+
+function updateCompareSlotStatus(){
+ [1,2].forEach(slot=>{
+  const data=getCompareSlot(slot);
+  const el=document.getElementById("compareStatus"+slot);
+  if(!el)return;
+  el.textContent=data?fmtSavedTime(data.savedAt):"저장값 없음";
+ });
+}
+
+function saveCompareSlot(slot){
+ try{
+  localStorage.setItem(COMPARE_SLOT_KEYS[slot],JSON.stringify(collectCompareMine()));
+  updateCompareSlotStatus();
+  const el=document.getElementById("compareStatus"+slot);
+  if(el)el.textContent="저장 완료 · 이 기기에 보관됨";
+ }catch(e){
+  alert("이 브라우저에서는 비교 스탯을 저장할 수 없습니다.");
+ }
+}
+
+function loadCompareSlot(slot){
+ const data=getCompareSlot(slot);
+ if(!data||!data.mine){
+  alert(slot+"번에 저장된 스탯이 없습니다.");
+  return;
+ }
+ Object.keys(data.mine).forEach(id=>{
+  const el=document.getElementById(id);
+  if(el)el.value=data.mine[id];
+ });
+ render();
+ const el=document.getElementById("compareStatus"+slot);
+ if(el)el.textContent=slot+"번 스탯을 현재 입력칸에 불러왔습니다.";
+}
+
+function buildStateFromCompareMine(mine){
+ const s=snap(); // 상대/방향/PvE는 현재 화면 설정을 공통으로 사용
+ Object.keys(mine||{}).forEach(k=>{
+  const n=parseFloat(mine[k]);
+  if(Number.isFinite(n))s[k]=n;
+ });
+ return s;
+}
+
+function pctDiff(a,b){
+ if(!Number.isFinite(a)||!Number.isFinite(b)||a===0)return 0;
+ return (b/a-1)*100;
+}
+
+function compareGainClass(v){
+ return v>0.0001?"up":v<-0.0001?"down":"same";
+}
+
+function signed(v,digits=2,suffix="%"){
+ const n=Number(v)||0;
+ return (n>0?"+":"")+n.toFixed(digits)+suffix;
+}
+
+function compareSlotsNow(){
+ const a=getCompareSlot(1),b=getCompareSlot(2);
+ if(!a||!a.mine||!b||!b.mine){
+  alert("1번과 2번 스탯을 먼저 둘 다 저장해주세요.");
+  return;
+ }
+ const s1=buildStateFromCompareMine(a.mine);
+ const s2=buildStateFromCompareMine(b.mine);
+ const n1=calc(s1,"normal"),n2=calc(s2,"normal");
+ const g1=calc(s1,"guaranteed"),g2=calc(s2,"guaranteed");
+ const nd=pctDiff(n1.dmg,n2.dmg);
+ const gd=pctDiff(g1.dmg,g2.dmg);
+
+ const changed=M.map(([id,label])=>{
+  const v1=parseFloat(a.mine[id])||0;
+  const v2=parseFloat(b.mine[id])||0;
+  const d=v2-v1;
+  return {id,label,v1,v2,d};
+ }).filter(x=>Math.abs(x.d)>1e-9);
+
+ const rows=changed.length?changed.map(x=>{
+   const cls=x.d>0?"up":x.d<0?"down":"";
+   const step=(M.find(f=>f[0]===x.id)||[])[3]||1;
+   const digits=step<1?1:0;
+   return '<div class="compare-change-row">'+
+     '<div>'+x.label+'</div>'+
+     '<div>'+x.v1.toFixed(digits)+'</div>'+
+     '<div>'+x.v2.toFixed(digits)+'</div>'+
+     '<div class="delta '+cls+'">'+(x.d>0?"+":"")+x.d.toFixed(digits)+'</div>'+
+   '</div>';
+ }).join(""):'<div style="font-size:12px;color:var(--muted);padding:10px 0">1번과 2번의 내 스탯 값이 같습니다.</div>';
+
+ const winnerNormal=nd>0?"2번이 더 높음":nd<0?"1번이 더 높음":"동일";
+ const winnerGuaranteed=gd>0?"2번이 더 높음":gd<0?"1번이 더 높음":"동일";
+
+ const out=document.getElementById("compareResult");
+ out.style.display="block";
+ out.innerHTML=
+   '<div class="compare-summary">'+
+    '<div class="compare-card">'+
+      '<div class="title">일반 스킬 기대값 비교</div>'+
+      '<div class="numbers">1번 '+Math.round(n1.dmg).toLocaleString()+' → 2번 '+Math.round(n2.dmg).toLocaleString()+'</div>'+
+      '<div class="gain '+compareGainClass(nd)+'">'+signed(nd,2,"%")+' · '+winnerNormal+'</div>'+
+    '</div>'+
+    '<div class="compare-card">'+
+      '<div class="title">100% 확정 치명 스킬 기대값 비교</div>'+
+      '<div class="numbers">1번 '+Math.round(g1.dmg).toLocaleString()+' → 2번 '+Math.round(g2.dmg).toLocaleString()+'</div>'+
+      '<div class="gain '+compareGainClass(gd)+'">'+signed(gd,2,"%")+' · '+winnerGuaranteed+'</div>'+
+    '</div>'+
+   '</div>'+
+   '<div class="compare-changes">'+
+    '<div style="font-size:13px;font-weight:700;margin-bottom:6px">바뀐 내 스탯</div>'+
+    '<div class="compare-change-row head"><div>항목</div><div>1번</div><div>2번</div><div>차이</div></div>'+
+    rows+
+   '</div>';
+}
+
+document.getElementById("saveCompare1").addEventListener("click",()=>saveCompareSlot(1));
+document.getElementById("saveCompare2").addEventListener("click",()=>saveCompareSlot(2));
+document.getElementById("loadCompare1").addEventListener("click",()=>loadCompareSlot(1));
+document.getElementById("loadCompare2").addEventListener("click",()=>loadCompareSlot(2));
+document.getElementById("compareSlots").addEventListener("click",compareSlotsNow);
+updateCompareSlotStatus();
+
 
 function collectMyStatsForSave(){
  const data={mine:{},speed:{},settings:{}};
