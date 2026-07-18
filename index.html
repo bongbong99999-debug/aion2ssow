@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>아이온2 딜 효율 계산기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Cinzel:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0e14; --panel:#12161f; --panel2:#171c27; --line:#242b3a;
+  --gold:#c9a26b; --gold-dim:#8a7350; --text:#dde3ee; --muted:#7d8699;
+  --green:#4fd1a5; --purple:#8f86e8; --red:#e26a6a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:14px;line-height:1.6;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(201,162,107,.07),transparent)}
+.wrap{max-width:960px;margin:0 auto;padding:28px 16px 60px}
+header{text-align:center;margin-bottom:26px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+h1{font-family:'Cinzel','Noto Sans KR',serif;font-size:26px;letter-spacing:3px;color:var(--gold);font-weight:600}
+h1 span{font-family:'Noto Sans KR';font-size:15px;letter-spacing:1px;color:var(--text);display:block;margin-top:4px;font-weight:500}
+.credit{font-size:11px;color:var(--gold-dim);margin-top:8px;letter-spacing:.5px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:8px 12px;font-family:inherit;font-size:13px}
+select:focus{outline:none;border-color:var(--gold-dim)}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;user-select:none;
+  background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px 12px}
+.chk input{accent-color:var(--gold);width:15px;height:15px}
+.chk.on{color:var(--gold);border-color:var(--gold-dim)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+@media(max-width:720px){.grid2{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.panel h2{font-size:13px;color:var(--gold);letter-spacing:2px;font-weight:500;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.f label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+.f input{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-size:13px;font-family:inherit}
+.f input:focus{outline:none;border-color:var(--gold-dim)}
+.results{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+@media(max-width:720px){.results{grid-template-columns:1fr}}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:10px;padding:16px;text-align:center}
+.card .lbl{font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:4px}
+.card .val{font-size:26px;font-weight:700;color:var(--gold)}
+.card .sub{font-size:11px;color:var(--muted);margin-top:2px}
+.eff h2{margin-bottom:4px}
+.eff .desc{font-size:12px;color:var(--muted);margin-bottom:14px}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:13px}
+.bar-row .name{width:150px;color:var(--muted);flex-shrink:0}
+.bar-row .track{flex:1;height:16px;background:var(--panel2);border-radius:4px;overflow:hidden;border:1px solid var(--line)}
+.bar-row .fill{height:100%;border-radius:3px;transition:width .25s}
+.bar-row .num{width:70px;text-align:right;font-weight:700;flex-shrink:0}
+.bar-row.top .name,.bar-row.top .num{color:var(--green)}
+.notes{margin-top:22px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+.notes b{color:var(--gold-dim);font-weight:500}
+.sources ul{list-style:none;margin:10px 0 12px}
+.sources li{margin-bottom:10px;padding-left:14px;border-left:2px solid var(--line)}
+.sources a{color:var(--gold);text-decoration:none}
+.sources a:hover{text-decoration:underline}
+.src-desc{color:var(--muted);font-size:11.5px}
+.donate-btn{margin-top:10px;background:none;border:1px solid var(--gold-dim);color:var(--gold);border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:.5px}
+.donate-btn:hover{background:rgba(201,162,107,.08)}
+.cmt{padding:8px 0;border-bottom:1px solid var(--line)}
+.cmt .who{color:var(--gold);font-weight:500;margin-right:8px}
+.cmt .when{color:var(--muted);font-size:11px;margin-left:8px}
+footer{text-align:center;margin-top:30px;font-size:11px;color:var(--gold-dim);letter-spacing:1px}
+
+.speed-panel{margin-bottom:18px}
+.speed-top{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:720px){.speed-top{grid-template-columns:1fr}}
+.speed-top .f select,.speed-top .f input{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:13px;font-family:inherit}
+.speed-top .f select:focus,.speed-top .f input:focus{outline:none;border-color:var(--gold-dim)}
+.speed-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0 14px}
+@media(max-width:720px){.speed-summary{grid-template-columns:1fr}}
+.speed-mini{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:11px 12px}
+.speed-mini .s-lbl{font-size:11px;color:var(--muted);margin-bottom:2px}
+.speed-mini .s-val{font-size:20px;font-weight:700;color:var(--gold)}
+.speed-mini .s-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.cap-list{display:grid;gap:8px}
+.cap-row{display:grid;grid-template-columns:minmax(150px,1.5fr) minmax(100px,.7fr) minmax(190px,1.4fr);gap:10px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+@media(max-width:720px){.cap-row{grid-template-columns:1fr;gap:3px}}
+.cap-name{font-weight:500}
+.cap-num{color:var(--gold);font-weight:700}
+.cap-state{font-size:12px;color:var(--muted)}
+.cap-state .ok{color:var(--green);font-weight:700}
+.cap-state .maybe{color:var(--gold);font-weight:700}
+.cap-state .no{color:var(--red);font-weight:700}
+.speed-foot{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.65}
+.speed-breakdown{background:rgba(201,162,107,.05);border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin:2px 0 12px;font-size:12px;color:var(--muted)}
+.speed-breakdown b{color:var(--gold);font-weight:600}
+.buff-note{font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.45}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>AION2<span>딜 효율 계산기</span></h1>
+  <div class="credit">문의하기 마르쿠탄 쑈</div>
+</header>
+
+<div class="toolbar">
+  <select id="preset">
+    <option value="deva" selected>상대: 타락한 데바의 성 · 어려움 (추정)</option>
+    <option value="horn">상대: 심연의 뿔암굴 4단계 (추정)</option>
+    <option value="trans4">상대: 구 초월 4단 막보 (실측)</option>
+    <option value="pvp">상대: PvP 랭커</option>
+    <option value="dummy">상대: 허수아비</option>
+  </select>
+  <select id="dir">
+    <option value="front">방향: 전방 판정</option>
+    <option value="back">방향: 후방 판정</option>
+    <option value="none">방향: 없음</option>
+  </select>
+  <label class="chk on" id="chkPveW"><input type="checkbox" id="isPve" checked>PvE (PVE·보스 피증 합산)</label>
+  <button id="reset" style="background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:8px 12px;font-size:12px;cursor:pointer;font-family:inherit">초기화</button>
+</div>
+
+<div class="grid2">
+  <div class="panel"><h2>내 스탯</h2><div class="fields" id="mine"></div></div>
+  <div class="panel"><h2>상대 스탯</h2><div class="fields" id="enemy"></div></div>
+</div>
+
+<div class="results">
+  <div class="card"><div class="lbl">기대 데미지 (1히트)</div><div class="val" id="outDmg">—</div><div class="sub">치명·강타·다단 기대값 포함</div></div>
+  <div class="card"><div class="lbl">총 배율</div><div class="val" id="outMult">—</div><div class="sub">기본 데미지에 곱해지는 값</div></div>
+  <div class="card"><div class="lbl">기본 데미지</div><div class="val" id="outBase">—</div><div class="sub">공격력·계수·관통 반영, 배율 전</div></div>
+</div>
+
+<div class="panel eff">
+  <h2>투자 효율 랭킹</h2>
+  <div class="desc">현재 스탯 기준, 각 항목을 1%p (관통은 +100) 올렸을 때 실질 딜 상승량. 초록색이 지금 가장 이득인 스탯.</div>
+  <div id="eff"></div>
+</div>
+
+
+<div class="panel speed-panel">
+  <h2>전투속도 캡 체크</h2>
+  <div class="desc" style="font-size:12px;color:var(--muted);margin-bottom:14px">
+    직업과 현재 전투속도를 입력하고 주문서·직업 버프·호법 질풍을 적용해 실제 전투 중 어떤 공속 구간을 돌파하는지 확인합니다.
+  </div>
+  <div class="speed-top">
+    <div class="f">
+      <label for="speedClass">직업</label>
+      <select id="speedClass">
+        <option>수호성</option><option>검성</option><option>살성</option><option>궁성</option>
+        <option>호법성</option><option>치유성</option><option>마도성</option><option>정령성</option><option>권성</option>
+      </select>
+    </div>
+    <div class="f">
+      <label for="speedNow">현재 전투속도 % (모든 임시 버프 미적용)</label>
+      <input type="number" id="speedNow" value="80" step="0.1" min="0" max="300">
+    </div>
+    <div class="f">
+      <label for="speedScroll">용기의 주문서</label>
+      <select id="speedScroll">
+        <option value="0">사용 안 함 · +0%p</option>
+        <option value="10">일반 용기의 주문서 · +10%p</option>
+        <option value="15">상급 용기의 주문서 · +15%p</option>
+        <option value="20" selected>최상급 용기의 주문서 · +20%p</option>
+      </select>
+    </div>
+  </div>
+  <div class="speed-top">
+    <div class="f">
+      <label for="speedClassBuff">직업 전투속도 버프</label>
+      <select id="speedClassBuff"></select>
+      <div class="buff-note" id="speedClassBuffNote"></div>
+    </div>
+    <div class="f">
+      <label for="speedPartyBuff">파티 버프</label>
+      <select id="speedPartyBuff">
+        <option value="0">질풍의 권능 사용 안 함 · +0%p</option>
+        <option value="20">호법성 질풍의 권능 · +20%p</option>
+      </select>
+      <div class="buff-note">자체 버프와 중첩 계산. 호법성이 자신의 질풍을 선택한 경우 같은 질풍은 중복 합산하지 않습니다.</div>
+    </div>
+    <div class="f">
+      <label for="speedExtra">기타 전투속도 보정 %p</label>
+      <input type="number" id="speedExtra" value="0" step="0.1" min="0" max="100">
+      <div class="buff-note">특화·신규 패치 등 별도 증가량이 있으면 직접 추가</div>
+    </div>
+  </div>
+  <div class="speed-breakdown" id="speedBreakdown">계산식 준비 중</div>
+  <div class="speed-summary">
+    <div class="speed-mini"><div class="s-lbl">현재 전투속도</div><div class="s-val" id="speedBaseOut">80.0%</div><div class="s-sub">임시 버프 미적용 기준</div></div>
+    <div class="speed-mini"><div class="s-lbl">최종 전투속도</div><div class="s-val" id="speedAfterOut">100.0%</div><div class="s-sub" id="speedScrollOut">적용 버프 합산</div></div>
+    <div class="speed-mini"><div class="s-lbl">버프로 새로 돌파</div><div class="s-val" id="speedNewOut">—</div><div class="s-sub" id="speedNextOut">직업별 캡 기준</div></div>
+  </div>
+  <div id="speedCaps" class="cap-list"></div>
+  <div class="speed-foot">
+    ※ 전투속도 증가 수치는 캐릭터 정보창에 더해지는 %p 기준으로 합산합니다. 같은 ‘질풍의 권능’끼리는 중복 합산하지 않습니다.<br>
+    ※ 수호성 전장의 깃발은 25레벨 특화의 전투속도 +10%p 기준, 검성 돌격 자세 +20%p, 살성 신속의 계약은 기본 +20%p / 20레벨 4특화 포함 +30%p, 궁성 광풍은 기본 +7%p, 호법성 질풍의 권능 +20%p를 선택할 수 있게 반영했습니다.<br>
+    ※ 마도성처럼 ‘특정 스킬 속도 증가’ 효과는 캐릭터 전투속도 수치와 별개이므로 공속캡 합산에서 제외합니다. 공속캡 자체는 스킬·특화·입력 방식에 따라 달라질 수 있습니다.<br><br>
+    <b style="color:var(--gold-dim)">공속 관련 안내</b> — 수호성 외 직업의 공속 구조는 제가 직접 플레이하며 정확히 아는 부분이 많지 않아 디시인사이드·인벤 등의 공속 연구글과 실측 자료를 참고해 정리했습니다. 잘못된 수치나 추가로 확인된 공속캡·버프 정보가 있다면 아래 댓글로 남겨주세요. 자료를 확인하고 검토한 뒤 수정해서 다시 배포하겠습니다.
+  </div>
+</div>
+
+
+<div class="notes">
+  <b>계산 방식</b> — 커뮤니티 실측 연구 기반.
+  피해 증폭·PVE 피증·보스 피증은 하나로 합산 후 상대 피해 내성을 뺀 값이 곱해지고,
+  전방·후방 피증은 방향 판정에 따라 하나만 적용되는 독립 곱연산, 무기 피증은 실효 0.66배(상대 무피 내성 차감), 치명타는 기본 150%에 치피증 합산(상대 치피 내성 차감),
+  강타는 확률 2배, 다단 히트는 타당 5% 기대값으로 계산합니다.
+  스킬 계수는 실측 공식(공격력의 45% + 스킬별 추가 수치)에 따라 45%로 고정되어 있으며, 스킬마다 다른 부분은 "스킬 추가 피해"로 입력합니다.<br><br>
+  <b>보스 프리셋 근거</b> — 구 초월 4단 막보는 실측값(피해내성 44% · 치피내성 25% · 무피내성 15%).
+  챕터1 신규 던전(타락한 데바의 성 · 심연의 뿔암굴)은 아직 정확한 실측치가 공개되지 않아,
+  최근 보스에 무피·치피 내성이 붙기 시작한 추세를 반영한 <b>추정치</b>입니다. 실측 자료가 나오면 직접 수정해서 쓰세요.
+  스킬 계수·추가 피해는 스킬마다 다르므로 본인 주력기 기준으로 맞추고,
+  절대 수치보다는 <b>"뭘 올릴지" 비교용</b>으로 활용하세요.
+</div>
+
+<div class="notes sources">
+  <b>참고 자료</b> — 이 계산기의 공식은 아래 커뮤니티 실측·연구 글들을 기반으로 만들어졌습니다.
+  <ul>
+    <li><a href="https://www.inven.co.kr/board/aion2/6444/902" target="_blank">피해증폭/제작무기 효율/데미지 관련 공식 등 정리 (대만펌) — 인벤</a><br>
+      <span class="src-desc">피증·PVE피증·보스피증 합연산, 후방(방향) 피증 독립 곱연산, 치피 합산, 강타 2배, 다단히트 타당 5%, 관통·방어력 /10, 완벽 효율 등 핵심 공식의 출처</span></li>
+    <li><a href="https://forum.gamer.com.tw/C.php?bsn=82913&amp;snA=2580" target="_blank">원본 연구글 1 — 대만 바하무트</a> ·
+        <a href="https://forum.gamer.com.tw/C.php?bsn=82913&amp;snA=2948" target="_blank">원본 연구글 2</a> ·
+        <a href="https://forum.gamer.com.tw/Co.php?bsn=82913&amp;sn=11552" target="_blank">원본 연구글 3</a><br>
+      <span class="src-desc">위 인벤 번역글의 원문 실험 자료</span></li>
+    <li><a href="https://gall.dcinside.com/mgallery/board/view/?id=aion2&amp;no=750340" target="_blank">무기 피해 증폭에 대한 검증 — 아이온2 갤러리</a><br>
+      <span class="src-desc">무피증 실효 약 0.66배(곱연산) 실측의 출처</span></li>
+    <li><a href="https://www.inven.co.kr/board/aion2/6444/1483" target="_blank">무기피해증폭의 효율? 1편 — 공격력에 대한 정확한 이해 — 인벤</a><br>
+      <span class="src-desc">무피증 효율이 캐릭터 스펙에 따라 달라진다는 분석 (0.66배는 근사치라는 점 참고)</span></li>
+    <li><a href="https://gall.dcinside.com/mgallery/board/view/?id=aion2&amp;no=1717642" target="_blank">보스의 치명타 피해 내성 / 무기 피해 내성 테스트 — 아이온2 갤러리</a><br>
+      <span class="src-desc">보스에 무피 내성·치피 내성이 붙기 시작했다는 실측 (카이시넬 10단 무피내성 약 20%, 치피내성 15%)</span></li>
+    <li><a href="https://gall.dcinside.com/mgallery/board/view/?id=aion2&amp;no=1724014" target="_blank">초월 4단 막보스 기준 내성값/방깎 효율 체크 — 아이온2 갤러리</a><br>
+      <span class="src-desc">구 초월 4단 막보 실측값(피해내성 44% · 치피내성 25%)의 출처, "구 초월 4단 (실측)" 프리셋 근거</span></li>
+    <li><a href="https://www.inven.co.kr/board/aion2/6444/1955" target="_blank">모든 피해증폭 효율 총 정리 (치피증, 후피증) — 인벤</a><br>
+      <span class="src-desc">피해증폭 계열 종합 효율 정리</span></li>
+    <li><a href="https://www.inven.co.kr/board/aion2/6444/1356" target="_blank">피해 내성 + 방어력에 관한 실험 — 인벤</a><br>
+      <span class="src-desc">내성(%) 선적용 → 방어력(고정 감소) 순서 구조 참고</span></li>
+    <li><a href="https://lounge.plaync.com/feed/58157?country=KR&amp;locale=ko-KR" target="_blank">2/4 클래스 케어 — NC 퍼플 라운지</a><br>
+      <span class="src-desc">궁성 광풍 화살 적중 시 광풍(전투 속도 +7%) 및 4번 특화의 대상 수별 추가 증가 근거</span></li>
+    <li><a href="https://www.inven.co.kr/board/aion2/6448/16354" target="_blank">검성 PVE 가이드 — 인벤</a> ·
+        <a href="https://www.inven.co.kr/board/aion2/6449/4378" target="_blank">살성 전속 테스트 — 인벤</a> ·
+        <a href="https://www.inven.co.kr/board/aion2/6451/8918" target="_blank">호법 질풍 테스트 — 인벤</a><br>
+      <span class="src-desc">돌격 자세 +20%, 신속의 계약 20레벨 실측 +30%, 질풍의 권능 +20% 전투속도 계산 근거</span></li>
+    <li><a href="https://www.inven.co.kr/board/aion2/6438/18484" target="_blank">수호성 전장의 깃발 25레벨 공속 특화 논의 — 인벤</a><br>
+      <span class="src-desc">전장의 깃발 25레벨 특화 전투속도 +10% 적용 참고. 패치 시 최신 툴팁과 대조 필요</span></li>
+  </ul>
+  <span class="src-desc">※ 챕터1 신규 던전(타락한 데바의 성 · 심연의 뿔암굴) 프리셋은 위 실측 추세를 반영한 추정치이며, 실측 자료가 공개되면 갱신이 필요합니다.</span>
+</div>
+
+<div class="panel" style="margin-top:22px;text-align:center;padding:14px 16px">
+  <button id="donate" class="donate-btn" style="margin-top:0"><span id="donateTxt">후원하기</span></button>
+  <div id="donateAccount" style="display:none;margin-top:10px;font-size:14px;color:var(--gold);font-weight:500">
+    카카오뱅크 3333-09-5144433 (최**)
+    <div style="margin-top:7px"><button id="copyAccount" class="donate-btn" style="margin-top:0">계좌번호 복사</button></div>
+  </div>
+</div>
+
+<div class="panel" style="margin-top:22px">
+  <h2>댓글</h2>
+  <div id="cmtOff" style="font-size:12px;color:var(--muted)">댓글 기능이 아직 연결되지 않았습니다. (배포자: 스크립트 상단 COMMENT_API에 Apps Script URL 입력)</div>
+  <div id="cmtOn" style="display:none">
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <input id="cmtName" placeholder="닉네임" maxlength="12" style="width:120px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:13px;font-family:inherit">
+      <input id="cmtText" placeholder="댓글을 입력하세요" maxlength="200" style="flex:1;min-width:200px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:13px;font-family:inherit">
+      <button id="cmtSubmit" style="background:var(--gold-dim);border:none;color:#0b0e14;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">등록</button>
+    </div>
+    <div id="cmtList" style="font-size:13px"></div>
+  </div>
+</div>
+
+<footer>AION2 damage calculator · 문의하기 마르쿠탄 쑈</footer>
+</div>
+
+<script>
+const M=[
+ ["atk","공격력",13538,1],["pen","관통",2560,10],
+ ["amp","피해 증폭 %",62.5,0.1],["pveAmp","PVE 피증 %",71.8,0.1],["bossAmp","보스 피증 %",8.5,0.1],
+ ["wAmp","무기 피증 %",68.7,0.1],
+ ["critR","치명타 확률 %",90,1],["critAmp","치피증 %",40.8,0.1],
+ ["frontAmp","전방 피증 %",31.3,0.1],["backAmp","후방 피증 %",0.6,0.1],
+ ["smite","강타 %",73.5,0.1],["multi","다단 히트 %",36,1],
+ ["flat","스킬 추가 피해",1500,10]
+];
+const E=[
+ ["eDef","방어력",40000,100],["eRes","피해 내성 %",50,0.1],
+ ["eCritRes","치피 내성 %",25,0.1],["eWRes","무피 내성 %",20,0.1],
+ ["eFrontRes","전방 내성 %",0,0.1],["eBackRes","후방 내성 %",0,0.1],["eSmiteRes","강타 저항 %",20,0.1]
+];
+const PRESETS={
+ pvp:{eDef:54916,eRes:24.6,eCritRes:37.7,eWRes:10,eFrontRes:3.6,eBackRes:6.7,eSmiteRes:33,isPve:false},
+ deva:{eDef:40000,eRes:50,eCritRes:25,eWRes:20,eFrontRes:0,eBackRes:0,eSmiteRes:20,isPve:true},
+ horn:{eDef:45000,eRes:55,eCritRes:30,eWRes:25,eFrontRes:0,eBackRes:0,eSmiteRes:25,isPve:true},
+ trans4:{eDef:30000,eRes:44,eCritRes:25,eWRes:15,eFrontRes:0,eBackRes:0,eSmiteRes:15,isPve:true},
+ dummy:{eDef:5000,eRes:10,eCritRes:0,eWRes:0,eFrontRes:0,eBackRes:0,eSmiteRes:0,isPve:true}
+};
+
+// 전투속도 캡 데이터
+// fixed: min=max / 범위형: 실제 돌파점이 min~max 사이로만 확인된 경우
+const SPEED_CAPS={
+  "수호성":[
+    {name:"심판 계열 1차",min:85.8,max:85.8,note:"초기 실측 참고"},
+    {name:"주요 공속 돌파",min:90.0,max:90.3,note:"실측상 87 미돌파 → 90.02 상승"},
+    {name:"연속 난타 계열",min:94.5,max:95.1,note:"94~95%대 구간"},
+    {name:"고점 다음 단계",min:116.7,max:116.7,note:"고점 커뮤니티 기준"}
+  ],
+  "검성":[
+    {name:"내려찍기 고점 구간",min:122.8,max:122.8,note:"122.8 실측 보고 · 세팅/입력 방식 논쟁 있음"}
+  ],
+  "살성":[
+    {name:"심장 찌르기 1차",min:88.1,max:88.2,note:"88.1%대 주요 돌파"},
+    {name:"빠른 베기 계열",min:92.1,max:92.1,note:"빠베 캡으로 통용"},
+    {name:"100%대 추가 구간",min:100.3,max:100.8,note:"스킬별 차이"},
+    {name:"전체 고점 구간",min:127.0,max:128.0,note:"127~128%대"}
+  ],
+  "궁성":[
+    {name:"초기 주요 구간",min:88.1,max:88.1,note:"스킬별 체감 차이 있음"},
+    {name:"100%대 추가 제보",min:101.0,max:101.0,note:"특정 스킬/세팅 기준 참고"},
+    {name:"고점 다음 단계",min:131.7,max:136.6,note:"131.6 미돌파 · 136.6 돌파 확인"}
+  ],
+  "호법성":[
+    {name:"암격쇄 계열",min:82.5,max:82.5,note:"실측 참고"},
+    {name:"관통쇄 계열",min:90.5,max:92.0,note:"90~92%대"},
+    {name:"고점 다음 단계",min:118.5,max:118.5,note:"질풍 포함 고점 기준"}
+  ],
+  "치유성":[
+    {name:"심판의 번개 1차",min:76.8,max:76.8,note:"스킬별 프레임 구간"},
+    {name:"심판의 번개 2차",min:91.8,max:91.8,note:"스킬별 프레임 구간"},
+    {name:"단죄 계열",min:94.4,max:94.4,note:"스킬별 프레임 구간"},
+    {name:"심판의 번개 고점",min:102.0,max:102.0,note:"고점 구간"}
+  ],
+  "마도성":[
+    {name:"불꽃 화살 계열 1차",min:97.8,max:98.3,note:"97.8~98.3%대"},
+    {name:"얼음 사슬 계열",min:100.0,max:100.0,note:"100%대"},
+    {name:"불꽃 화살 다음 단계",min:112.6,max:113.6,note:"112.6~113.6%대"}
+  ],
+  "정령성":[
+    {name:"주요 공속 돌파",min:102.0,max:102.0,note:"101 미돌파 · 102 타수 변화 실측"},
+    {name:"추가 고점 제보",min:107.0,max:108.0,note:"특정 소환/융합 모션 제보 · 참고"}
+  ],
+  "권성":[
+    {name:"폭주 기준 주요 구간",min:107.4,max:107.4,note:"최근 실험 기준"}
+  ]
+};
+
+// 직업별 전투속도 버프. 캐릭터 정보창 전투속도에 더해지는 값만 포함합니다.
+const SPEED_BUFFS={
+  "수호성":[
+    {key:"none",label:"사용 안 함 · +0%p",value:0,note:""},
+    {key:"flag25",label:"전장의 깃발 25레벨 특화 · +10%p",value:10,note:"25레벨 특화 기준. 유지 시간 동안 전투속도 증가."}
+  ],
+  "검성":[
+    {key:"none",label:"사용 안 함 · +0%p",value:0,note:""},
+    {key:"charge",label:"돌격 자세 · +20%p",value:20,note:"10초간 자신의 전투속도·이동속도 증가."}
+  ],
+  "살성":[
+    {key:"none",label:"사용 안 함 · +0%p",value:0,note:""},
+    {key:"swift20base",label:"신속의 계약 기본 · +20%p",value:20,note:"기본 효과 기준."},
+    {key:"swift20spec4",label:"신속의 계약 20레벨(4특화 포함) · +30%p",value:30,note:"4번 특화의 전투속도 증가량 +10%p 포함. 실측에서도 20레벨 +30%p 확인."}
+  ],
+  "궁성":[
+    {key:"none",label:"사용 안 함 · +0%p",value:0,note:""},
+    {key:"gale",label:"광풍 · 기본 +7%p",value:7,note:"광풍 화살 적중 후 10초 기본 효과. 4번 특화의 대상 수별 추가 증가분은 ‘기타 보정’에 입력."}
+  ],
+  "호법성":[
+    {key:"none",label:"사용 안 함 · +0%p",value:0,note:""},
+    {key:"gust",label:"질풍의 권능 · +20%p",value:20,note:"자신과 파티에 적용되는 전투속도 증가 효과."}
+  ],
+  "치유성":[{key:"none",label:"확인된 전역 전투속도 자버프 없음 · +0%p",value:0,note:"특정 스킬 모션/속도 효과는 전역 공속 합산에서 제외."}],
+  "마도성":[{key:"none",label:"확인된 전역 전투속도 자버프 없음 · +0%p",value:0,note:"얼음 사슬 등 ‘스킬 속도’ 특화는 해당 스킬만 적용되어 전역 공속 합산에서 제외."}],
+  "정령성":[{key:"none",label:"확인된 전역 전투속도 자버프 없음 · +0%p",value:0,note:"추가타 간격/스킬 모션 변화는 전역 전투속도와 구분."}],
+  "권성":[{key:"none",label:"확인된 전역 전투속도 자버프 없음 · +0%p",value:0,note:"개별 스킬 속도 특화는 전역 공속 합산에서 제외."}]
+};
+
+function populateSpeedBuffs(){
+  const cls=document.getElementById("speedClass").value;
+  const sel=document.getElementById("speedClassBuff");
+  const list=SPEED_BUFFS[cls]||SPEED_BUFFS["권성"];
+  sel.innerHTML=list.map((b,i)=>'<option value="'+i+'">'+b.label+'</option>').join("");
+  sel.value="0";
+  document.getElementById("speedClassBuffNote").textContent=list[0].note||"직업 버프를 선택하면 설명이 표시됩니다.";
+}
+
+function capState(speed,cap){
+  if(speed>=cap.max)return "ok";
+  if(cap.max>cap.min&&speed>=cap.min)return "maybe";
+  return "no";
+}
+function capText(state){
+  return state==="ok"?"돌파":state==="maybe"?"후보 구간":"미돌파";
+}
+function capRange(cap){
+  return cap.min===cap.max?cap.min.toFixed(1)+"%":cap.min.toFixed(1)+"~"+cap.max.toFixed(1)+"%";
+}
+function renderSpeed(){
+  const cls=document.getElementById("speedClass").value;
+  const base=parseFloat(document.getElementById("speedNow").value)||0;
+  const scrollBonus=parseFloat(document.getElementById("speedScroll").value)||0;
+  const buffList=SPEED_BUFFS[cls]||[];
+  const buffIndex=parseInt(document.getElementById("speedClassBuff").value||"0",10);
+  const classBuff=buffList[buffIndex]||{key:"none",label:"사용 안 함",value:0,note:""};
+  const classBonus=Number(classBuff.value)||0;
+  const partyRaw=parseFloat(document.getElementById("speedPartyBuff").value)||0;
+  // 호법성이 자신의 질풍을 켜고 동일한 질풍 파티버프도 선택해도 같은 효과는 1회만 계산
+  const partyBonus=(cls==="호법성"&&classBuff.key==="gust")?0:partyRaw;
+  const extraBonus=parseFloat(document.getElementById("speedExtra").value)||0;
+  const after=base+scrollBonus+classBonus+partyBonus+extraBonus;
+  const caps=SPEED_CAPS[cls]||[];
+
+  document.getElementById("speedClassBuffNote").textContent=classBuff.note||"직업 전투속도 버프 미사용";
+  document.getElementById("speedBaseOut").textContent=base.toFixed(1)+"%";
+  document.getElementById("speedAfterOut").textContent=after.toFixed(1)+"%";
+
+  const parts=[];
+  if(scrollBonus)parts.push("주문서 +"+scrollBonus.toFixed(1));
+  if(classBonus)parts.push(classBuff.label.replace(/ ·.*/,"" )+" +"+classBonus.toFixed(1));
+  if(partyRaw){
+    if(partyBonus)parts.push("질풍 +"+partyBonus.toFixed(1));
+    else parts.push("질풍 중복 제외");
+  }
+  if(extraBonus)parts.push("기타 +"+extraBonus.toFixed(1));
+  document.getElementById("speedScrollOut").textContent=parts.length?parts.join(" · "):"추가 버프 없음";
+
+  const formula=[base.toFixed(1)];
+  if(scrollBonus)formula.push("+ 주문서 "+scrollBonus.toFixed(1));
+  if(classBonus)formula.push("+ 직업버프 "+classBonus.toFixed(1));
+  if(partyBonus)formula.push("+ 질풍 "+partyBonus.toFixed(1));
+  if(extraBonus)formula.push("+ 기타 "+extraBonus.toFixed(1));
+  document.getElementById("speedBreakdown").innerHTML='<b>계산</b> '+formula.join(" ")+' = <b>'+after.toFixed(1)+'%</b>'+(partyRaw&&!partyBonus?' <span style="color:var(--muted)">· 동일 질풍 중복 제외</span>':'');
+
+  const newly=caps.filter(c=>capState(base,c)!=="ok"&&capState(after,c)==="ok");
+  const candidate=caps.filter(c=>capState(base,c)==="no"&&capState(after,c)==="maybe");
+  document.getElementById("speedNewOut").textContent=newly.length?newly.length+"개":candidate.length?"후보 진입":"없음";
+
+  let next=caps.find(c=>capState(after,c)!=="ok");
+  if(!next){
+    document.getElementById("speedNextOut").textContent="표시된 최고 구간까지 돌파";
+  }else if(capState(after,next)==="maybe"){
+    document.getElementById("speedNextOut").textContent=next.name+" 후보 구간 진입";
+  }else{
+    const need=Math.max(next.min-after,0);
+    document.getElementById("speedNextOut").textContent="다음: "+next.name+"까지 최소 +"+need.toFixed(1)+"%p";
+  }
+
+  document.getElementById("speedCaps").innerHTML=caps.map(cap=>{
+    const a=capState(base,cap),b=capState(after,cap);
+    return '<div class="cap-row">'+
+      '<div><div class="cap-name">'+cap.name+'</div><div class="src-desc">'+cap.note+'</div></div>'+ 
+      '<div class="cap-num">'+capRange(cap)+'</div>'+ 
+      '<div class="cap-state">현재 <span class="'+a+'">'+capText(a)+'</span> · 풀버프 후 <span class="'+b+'">'+capText(b)+'</span></div>'+ 
+    '</div>';
+  }).join("");
+}
+
+function onSpeedClassChange(){
+  populateSpeedBuffs();
+  renderSpeed();
+}
+
+document.getElementById("speedClass").addEventListener("change",onSpeedClassChange);
+["speedNow","speedScroll","speedClassBuff","speedPartyBuff","speedExtra"].forEach(id=>{
+  document.getElementById(id).addEventListener("input",renderSpeed);
+  document.getElementById(id).addEventListener("change",renderSpeed);
+});
+populateSpeedBuffs();
+renderSpeed();
+
+function field(host,[id,label,val,step]){
+ const w=document.createElement("div");w.className="f";
+ w.innerHTML='<label for="'+id+'">'+label+'</label><input type="number" id="'+id+'" value="'+val+'" step="'+step+'">';
+ host.appendChild(w);
+}
+M.forEach(f=>field(document.getElementById("mine"),f));
+E.forEach(f=>field(document.getElementById("enemy"),f));
+const v=id=>parseFloat(document.getElementById(id).value)||0;
+
+function calc(s){
+ const base=Math.max(s.atk*0.45+s.flat-Math.max(s.eDef-s.pen,0)/10,1);
+ const bucket=s.amp+(s.isPve?s.pveAmp+s.bossAmp:0)-s.eRes;
+ const mAmp=Math.max(1+bucket/100,0.1);
+ let mF=1;
+ if(s.dir==="front")mF=Math.max(1+(s.frontAmp-s.eFrontRes)/100,1);
+ else if(s.dir==="back")mF=Math.max(1+(s.backAmp-s.eBackRes)/100,1);
+ const mW=1+Math.max(s.wAmp-s.eWRes,0)*0.66/100;
+ const mC=1+Math.min(s.critR,100)/100*(0.5+(s.critAmp-s.eCritRes)/100);
+ const mS=1+Math.max(Math.min(s.smite-s.eSmiteRes,100),0)/100;
+ const mM=1+Math.min(s.multi,100)/100*0.125;
+ return{dmg:base*mAmp*mF*mW*mC*mS*mM,base:base,mult:mAmp*mF*mW*mC*mS*mM};
+}
+function snap(){
+ const s={};M.concat(E).forEach(f=>s[f[0]]=v(f[0]));
+ s.dir=document.getElementById("dir").value;
+ s.isPve=document.getElementById("isPve").checked;
+ return s;
+}
+function render(){
+ const s=snap(),r=calc(s);
+ document.getElementById("outDmg").textContent=Math.round(r.dmg).toLocaleString();
+ document.getElementById("outBase").textContent=Math.round(r.base).toLocaleString();
+ document.getElementById("outMult").textContent="\u00d7"+r.mult.toFixed(2);
+ document.getElementById("chkPveW").classList.toggle("on",s.isPve);
+ const tests=[
+  ["전방 피증 +1%p","frontAmp",1],["후방 피증 +1%p","backAmp",1],["피해 증폭 +1%p","amp",1],
+  ["강타 +1%p","smite",1],["치피증 +1%p","critAmp",1],["무기 피증 +1%p","wAmp",1],
+  ["다단 히트 +1%p","multi",1],["관통 +100","pen",100]
+ ];
+ const rows=tests.map(([label,key,d])=>{
+  const s2=Object.assign({},s);s2[key]=s[key]+d;
+  return[label,(calc(s2).dmg/r.dmg-1)*100];
+ }).sort((a,b)=>b[1]-a[1]);
+ const max=Math.max(rows[0][1],0.001);
+ document.getElementById("eff").innerHTML=rows.map(([label,g],i)=>
+  '<div class="bar-row'+(i===0?' top':'')+'">'+
+  '<span class="name">'+label+'</span>'+
+  '<div class="track"><div class="fill" style="width:'+Math.max(g/max*100,1.5)+'%;background:'+(i===0?'var(--green)':'var(--purple)')+'"></div></div>'+
+  '<span class="num">+'+g.toFixed(2)+'%</span></div>'
+ ).join("");
+}
+document.getElementById("preset").addEventListener("change",e=>{
+ const p=PRESETS[e.target.value];
+ Object.keys(p).forEach(k=>{
+  if(k==="isPve")document.getElementById("isPve").checked=p[k];
+  else document.getElementById(k).value=p[k];
+ });
+ render();
+});
+document.getElementById("reset").addEventListener("click",()=>{
+ M.concat(E).forEach(f=>document.getElementById(f[0]).value=f[2]);
+ document.getElementById("dir").value="front";
+ document.getElementById("isPve").checked=true;
+ document.getElementById("preset").value="deva";
+ document.getElementById("speedClass").value="수호성";
+ document.getElementById("speedNow").value=80;
+ document.getElementById("speedScroll").value=20;
+ document.getElementById("speedPartyBuff").value=0;
+ document.getElementById("speedExtra").value=0;
+ populateSpeedBuffs();
+ renderSpeed();
+ render();
+});
+document.querySelectorAll("input,select").forEach(el=>el.addEventListener("input",render));
+render();
+
+const ACCOUNT_NUM="3333095144433";
+const donateBtn=document.getElementById("donate");
+const donateAccount=document.getElementById("donateAccount");
+const copyAccountBtn=document.getElementById("copyAccount");
+if(donateBtn){
+ donateBtn.addEventListener("click",()=>{
+  donateAccount.style.display=donateAccount.style.display==="none"?"block":"none";
+  document.getElementById("donateTxt").textContent=donateAccount.style.display==="none"?"후원하기":"후원계좌 닫기";
+ });
+}
+if(copyAccountBtn){
+ copyAccountBtn.addEventListener("click",()=>{
+  const done=()=>{
+   const old=copyAccountBtn.textContent;
+   copyAccountBtn.textContent="복사됨!";
+   setTimeout(()=>{copyAccountBtn.textContent=old},1800);
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+   navigator.clipboard.writeText(ACCOUNT_NUM).then(done).catch(()=>{fallbackCopy();done();});
+  }else{fallbackCopy();done();}
+ });
+}
+function fallbackCopy(){
+ const ta=document.createElement("textarea");
+ ta.value=ACCOUNT_NUM;document.body.appendChild(ta);
+ ta.select();document.execCommand("copy");document.body.removeChild(ta);
+}
+
+const COMMENT_API="https://script.google.com/macros/s/AKfycbyYiXiIrlMfl0He8d3ngk_-x9ic298kHf4eQbSRRvVZ7Z7NEz2IKDiln-3q_2j440gxuQ/exec";
+if(COMMENT_API){
+ document.getElementById("cmtOff").style.display="none";
+ document.getElementById("cmtOn").style.display="block";
+ loadComments();
+}
+function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML}
+function loadComments(){
+ fetch(COMMENT_API+"?t="+Date.now(),{cache:"no-store"}).then(r=>r.json()).then(list=>{
+  document.getElementById("cmtList").innerHTML=list.length?list.map(c=>
+   '<div class="cmt"><span class="who">'+esc(c.name)+'</span>'+esc(c.text)+
+   '<span class="when">'+esc(c.time||"")+'</span></div>'
+  ).join(""):'<div style="color:var(--muted)">첫 댓글을 남겨보세요.</div>';
+ }).catch(()=>{document.getElementById("cmtList").innerHTML='<div style="color:var(--muted)">댓글을 불러오지 못했습니다.</div>'});
+}
+const cmtBtn=document.getElementById("cmtSubmit");
+if(cmtBtn)cmtBtn.addEventListener("click",()=>{
+ const name=document.getElementById("cmtName").value.trim();
+ const text=document.getElementById("cmtText").value.trim();
+ if(!name||!text)return alert("닉네임과 내용을 입력하세요.");
+ cmtBtn.disabled=true;cmtBtn.textContent="...";
+ fetch(COMMENT_API,{method:"POST",body:JSON.stringify({name:name,text:text})})
+  .then(()=>{document.getElementById("cmtText").value="";loadComments();})
+  .catch(()=>alert("등록 실패. 잠시 후 다시 시도하세요."))
+  .finally(()=>{cmtBtn.disabled=false;cmtBtn.textContent="등록";});
+});
+</script>
+</body>
+</html>
