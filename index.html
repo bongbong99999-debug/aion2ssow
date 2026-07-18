@@ -20,6 +20,9 @@ h1{font-family:'Cinzel','Noto Sans KR',serif;font-size:26px;letter-spacing:3px;c
 h1 span{font-family:'Noto Sans KR';font-size:15px;letter-spacing:1px;color:var(--text);display:block;margin-top:4px;font-weight:500}
 .credit{font-size:11px;color:var(--gold-dim);margin-top:8px;letter-spacing:.5px}
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.save-btn{background:none;border:1px solid var(--gold-dim);color:var(--gold);border-radius:6px;padding:8px 12px;font-size:12px;cursor:pointer;font-family:inherit}
+.save-btn:hover{background:rgba(201,162,107,.08)}
+.save-status{font-size:11px;color:var(--muted);min-width:86px}
 select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:8px 12px;font-family:inherit;font-size:13px}
 select:focus{outline:none;border-color:var(--gold-dim)}
 .chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;user-select:none;
@@ -127,12 +130,20 @@ footer{text-align:center;margin-top:30px;font-size:11px;color:var(--gold-dim);le
     <option value="dummy">상대: 허수아비</option>
   </select>
   <select id="dir">
-    <option value="front">방향: 전방 판정</option>
-    <option value="back">방향: 후방 판정</option>
-    <option value="none">방향: 없음</option>
+    <option value="front">방향: 전방 위주</option>
+    <option value="back">방향: 후방 위주</option>
+    <option value="none">방향: 보정 없음</option>
+  </select>
+  <select id="dirRate">
+    <option value="100">방향 비율: 100%</option>
+    <option value="90" selected>방향 비율: 90%</option>
+    <option value="80">방향 비율: 80%</option>
   </select>
   <label class="chk on" id="chkPveW"><input type="checkbox" id="isPve" checked>PvE (PVE·보스 피증 합산)</label>
   <button id="reset" style="background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:8px 12px;font-size:12px;cursor:pointer;font-family:inherit">초기화</button>
+  <button id="saveMyStats" class="save-btn">내 스탯 저장</button>
+  <button id="loadMyStats" class="save-btn">저장값 불러오기</button>
+  <span id="saveStatus" class="save-status"></span>
 </div>
 
 <div class="grid2">
@@ -249,7 +260,7 @@ footer{text-align:center;margin-top:30px;font-size:11px;color:var(--gold-dim);le
 <div class="notes">
   <b>계산 방식</b> — 커뮤니티 실측 연구 기반.
   피해 증폭·PVE 피증·보스 피증은 하나로 합산 후 상대 피해 내성을 뺀 값이 곱해지고,
-  전방·후방 피증은 방향 판정에 따라 하나만 적용되는 독립 곱연산, 무기 피증은 실효 0.66배(상대 무피 내성 차감), 치명타 피해는 기본 150%에 치피증을 합산하고 상대 치피 내성을 차감해 계산합니다.
+  전방·후방 피해 증폭은 선택한 방향과 실제 유지 비율(100%·90%·80%)을 가중 평균해 계산합니다. 예를 들어 <b>후방 90%</b>는 후방 판정 90% + 전방 판정 10%로 기대값을 계산합니다. 무기 피증은 실효 0.66배(상대 무피 내성 차감), 치명타 피해는 기본 150%에 치피증을 합산하고 상대 치피 내성을 차감해 계산합니다.
   치명타는 두 가지로 나눠 계산합니다. <b>일반 스킬</b>은 내 치명타 수치 − 상대 치명타 저항을 유효 치명타 수치로 보고 커뮤니티 실측 기반 근사식으로 발생 확률을 추정하되, <b>최대 80%</b>로 제한합니다. <b>100% 확정 치명 스킬</b>은 치명 발생률을 100%로 고정해 별도 계산하며, 이 경우 치명타 수치와 치명타 발생 저항은 해당 스킬의 기대값에 반영하지 않고 <b>상대 치피 내성은 그대로 적용</b>합니다.
   보스별 치명타 저항 수치는 아직 프리셋에 임의로 넣지 않았습니다. 정확한 실측값을 알고 있다면 상대 스탯의 "치명타 저항"에 직접 입력하세요.
   강타는 확률 2배, 다단 히트는 타당 5% 기대값으로 계산합니다.
@@ -323,17 +334,28 @@ footer{text-align:center;margin-top:30px;font-size:11px;color:var(--gold-dim);le
 
 <script>
 const M=[
- ["atk","공격력",13538,1],["pen","관통",2560,10],
- ["amp","피해 증폭 %",62.5,0.1],["pveAmp","PVE 피증 %",71.8,0.1],["bossAmp","보스 피증 %",8.5,0.1],
- ["wAmp","무기 피증 %",68.7,0.1],
- ["critStat","치명타 수치",1326,1],["critAmp","치피증 %",40.8,0.1],
- ["frontAmp","전방 피증 %",31.3,0.1],["backAmp","후방 피증 %",0.6,0.1],
- ["smite","강타 %",73.5,0.1],["multi","다단 히트 %",36,1]
+ ["atk","공격력",13538,1],
+ ["pen","관통",2560,10],
+ ["critStat","치명타 공격력",1326,1],
+ ["amp","피해 증폭 %",62.5,0.1],
+ ["wAmp","무기 피해 증폭 %",68.7,0.1],
+ ["critAmp","치명타 피해 증폭 %",40.8,0.1],
+ ["backAmp","후방 피해 증폭 %",0.6,0.1],
+ ["frontAmp","전방 피해 증폭 %",31.3,0.1],
+ ["multi","다단 히트 적중 %",36,1],
+ ["smite","강타 %",73.5,0.1],
+ ["pveAmp","PVE 피해 증폭 %",71.8,0.1],
+ ["bossAmp","보스 피해 증폭 %",8.5,0.1]
 ];
 const E=[
- ["eDef","방어력",40000,100],["eRes","피해 내성 %",50,0.1],
- ["eCritStat","치명타 저항 (수치·모르면 0)",0,1],["eCritRes","치피 내성 %",25,0.1],["eWRes","무피 내성 %",20,0.1],
- ["eFrontRes","전방 내성 %",0,0.1],["eBackRes","후방 내성 %",0,0.1],["eSmiteRes","강타 저항 %",30,0.1]
+ ["eDef","방어력",40000,100],
+ ["eCritStat","치명타 방어력/저항 (수치·모르면 0)",0,1],
+ ["eRes","피해 내성 %",50,0.1],
+ ["eWRes","무기 피해 내성 %",20,0.1],
+ ["eCritRes","치명타 피해 내성 %",25,0.1],
+ ["eBackRes","후방 피해 내성 %",0,0.1],
+ ["eFrontRes","전방 피해 내성 %",0,0.1],
+ ["eSmiteRes","강타 저항 %",30,0.1]
 ];
 const PRESETS={
  pvp:{eDef:54916,eRes:24.6,eCritStat:0,eCritRes:37.7,eWRes:10,eFrontRes:3.6,eBackRes:6.7,eSmiteRes:33,isPve:false},
@@ -522,6 +544,95 @@ M.forEach(f=>field(document.getElementById("mine"),f));
 E.forEach(f=>field(document.getElementById("enemy"),f));
 const v=id=>parseFloat(document.getElementById(id).value)||0;
 
+const MY_STATS_STORAGE_KEY="aion2_my_stats_v1";
+
+function collectMyStatsForSave(){
+ const data={mine:{},speed:{},settings:{}};
+ M.forEach(f=>{
+  const el=document.getElementById(f[0]);
+  if(el)data.mine[f[0]]=el.value;
+ });
+ ["speedClass","speedNow","speedScroll","speedClassBuff","speedPartyBuff","speedExtra"].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el)data.speed[id]=el.value;
+ });
+ ["dir","dirRate"].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el)data.settings[id]=el.value;
+ });
+ data.settings.isPve=document.getElementById("isPve").checked;
+ data.savedAt=Date.now();
+ return data;
+}
+
+function setSaveStatus(msg){
+ const el=document.getElementById("saveStatus");
+ if(!el)return;
+ el.textContent=msg;
+ if(msg){
+  clearTimeout(setSaveStatus._t);
+  setSaveStatus._t=setTimeout(()=>{el.textContent=""},2600);
+ }
+}
+
+function saveMyStats(){
+ try{
+  localStorage.setItem(MY_STATS_STORAGE_KEY,JSON.stringify(collectMyStatsForSave()));
+  setSaveStatus("이 기기에 저장됨");
+ }catch(e){
+  alert("이 브라우저에서는 저장 기능을 사용할 수 없습니다.");
+ }
+}
+
+function loadMyStats(showMessage=true){
+ try{
+  const raw=localStorage.getItem(MY_STATS_STORAGE_KEY);
+  if(!raw){
+   if(showMessage)setSaveStatus("저장된 값 없음");
+   return false;
+  }
+  const data=JSON.parse(raw);
+  if(data.mine){
+   Object.keys(data.mine).forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.value=data.mine[id];
+   });
+  }
+  if(data.settings){
+   ["dir","dirRate"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el && data.settings[id]!==undefined)el.value=data.settings[id];
+   });
+   if(data.settings.isPve!==undefined)document.getElementById("isPve").checked=!!data.settings.isPve;
+  }
+  if(data.speed){
+   if(data.speed.speedClass && document.getElementById("speedClass")){
+    document.getElementById("speedClass").value=data.speed.speedClass;
+    populateSpeedBuffs();
+   }
+   ["speedNow","speedScroll","speedPartyBuff","speedExtra"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el && data.speed[id]!==undefined)el.value=data.speed[id];
+   });
+   if(data.speed.speedClassBuff!==undefined && document.getElementById("speedClassBuff")){
+    document.getElementById("speedClassBuff").value=data.speed.speedClassBuff;
+   }
+  }
+  renderSpeed();
+  render();
+  if(showMessage)setSaveStatus("저장값 불러옴");
+  return true;
+ }catch(e){
+  if(showMessage)setSaveStatus("불러오기 실패");
+  return false;
+ }
+}
+
+const saveMyStatsBtn=document.getElementById("saveMyStats");
+const loadMyStatsBtn=document.getElementById("loadMyStats");
+if(saveMyStatsBtn)saveMyStatsBtn.addEventListener("click",saveMyStats);
+if(loadMyStatsBtn)loadMyStatsBtn.addEventListener("click",()=>loadMyStats(true));
+
 function estimateCritRate(critStat,eCritStat){
  // 치명타 수치와 대상 치명타 저항의 차이를 기반으로 한 커뮤니티 실측 근사식.
  // 일반 스킬 계산에서는 최종 발생률을 80% 상한으로 제한합니다.
@@ -534,9 +645,12 @@ function calc(s,critMode="normal"){
  const base=Math.max(s.atk-Math.max(s.eDef-s.pen,0)/10,1);
  const bucket=s.amp+(s.isPve?s.pveAmp+s.bossAmp:0)-s.eRes;
  const mAmp=Math.max(1+bucket/100,0.1);
+ const frontMult=Math.max(1+(s.frontAmp-s.eFrontRes)/100,1);
+ const backMult=Math.max(1+(s.backAmp-s.eBackRes)/100,1);
+ const dirRate=Math.max(0,Math.min(s.dirRate||100,100))/100;
  let mF=1;
- if(s.dir==="front")mF=Math.max(1+(s.frontAmp-s.eFrontRes)/100,1);
- else if(s.dir==="back")mF=Math.max(1+(s.backAmp-s.eBackRes)/100,1);
+ if(s.dir==="front")mF=frontMult*dirRate+backMult*(1-dirRate);
+ else if(s.dir==="back")mF=backMult*dirRate+frontMult*(1-dirRate);
  const mW=1+Math.max(s.wAmp-s.eWRes,0)*0.66/100;
  const critRate=critMode==="guaranteed"?1:estimateCritRate(s.critStat,s.eCritStat);
  const mC=1+critRate*(0.5+(s.critAmp-s.eCritRes)/100);
@@ -547,14 +661,15 @@ function calc(s,critMode="normal"){
 function snap(){
  const s={};M.concat(E).forEach(f=>s[f[0]]=v(f[0]));
  s.dir=document.getElementById("dir").value;
+ s.dirRate=parseFloat(document.getElementById("dirRate").value)||100;
  s.isPve=document.getElementById("isPve").checked;
  return s;
 }
 function renderEff(hostId,s,baseResult,critMode){
  const tests=[
-  ["전방 피증 +1%p","frontAmp",1],["후방 피증 +1%p","backAmp",1],["피해 증폭 +1%p","amp",1],
-  ["강타 +1%p","smite",1],["치피증 +1%p","critAmp",1],["무기 피증 +1%p","wAmp",1],
-  ["다단 히트 +1%p","multi",1],["치명타 +100","critStat",100],["관통 +100","pen",100]
+  ["전방 피해 증폭 +1%p","frontAmp",1],["후방 피해 증폭 +1%p","backAmp",1],["피해 증폭 +1%p","amp",1],
+  ["강타 +1%p","smite",1],["치명타 피해 증폭 +1%p","critAmp",1],["무기 피해 증폭 +1%p","wAmp",1],
+  ["다단 히트 적중 +1%p","multi",1],["치명타 공격력 +100","critStat",100],["관통 +100","pen",100]
  ];
  const rows=tests.map(([label,key,d])=>{
   const s2=Object.assign({},s);s2[key]=s[key]+d;
@@ -594,6 +709,7 @@ document.getElementById("preset").addEventListener("change",e=>{
 document.getElementById("reset").addEventListener("click",()=>{
  M.concat(E).forEach(f=>document.getElementById(f[0]).value=f[2]);
  document.getElementById("dir").value="front";
+ document.getElementById("dirRate").value="90";
  document.getElementById("isPve").checked=true;
  document.getElementById("preset").value="deva";
  document.getElementById("speedClass").value="수호성";
@@ -607,6 +723,8 @@ document.getElementById("reset").addEventListener("click",()=>{
 });
 document.querySelectorAll("input,select").forEach(el=>el.addEventListener("input",render));
 render();
+// 같은 브라우저/기기에서 저장한 내 스탯이 있으면 다음 방문 때 자동 복원합니다.
+loadMyStats(false);
 
 const ACCOUNT_NUM="3333095144433";
 const donateBtn=document.getElementById("donate");
