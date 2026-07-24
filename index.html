@@ -172,6 +172,10 @@ footer{text-align:center;margin-top:30px;font-size:11px;color:var(--gold-dim);le
     <option value="100">방향 비율: 100%</option>
     <option value="90" selected>방향 비율: 90%</option>
     <option value="80">방향 비율: 80%</option>
+    <option value="70">방향 비율: 70%</option>
+    <option value="60">방향 비율: 60%</option>
+    <option value="50">방향 비율: 50%</option>
+    <option value="40">방향 비율: 40%</option>
   </select>
   <label class="chk on" id="chkPveW"><input type="checkbox" id="isPve" checked>PvE (PVE·보스 피증 합산)</label>
   <button id="reset" style="background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:8px 12px;font-size:12px;cursor:pointer;font-family:inherit">초기화</button>
@@ -180,12 +184,7 @@ footer{text-align:center;margin-top:30px;font-size:11px;color:var(--gold-dim);le
   <span id="saveStatus" class="save-status"></span>
 </div>
 
-<div style="margin:-6px 0 16px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:11.5px;line-height:1.65;color:var(--muted)">
-  <b style="color:var(--gold)">※ 보스 수치 안내</b><br>
-  현재 실측이 확인되지 않은 보스의 방어력·피해내성·무기피해내성 등은 <b style="color:var(--text)">추정값</b>이 포함되어 있습니다.
-  실제 보스 수치에 따라 특히 <b style="color:var(--text)">무기 피해 증폭·관통·피해 증폭의 실제 효율은 조금씩 달라질 수 있습니다.</b>
-  검증 가능한 실험/실측 자료가 확인되는 대로 보스 프리셋을 추가하고 수치를 업데이트할 예정입니다.
-</div>
+
 
 <div class="panel buff-panel">
   <h2>파티 버프</h2>
@@ -266,7 +265,11 @@ footer{text-align:center;margin-top:30px;font-size:11px;color:var(--gold-dim);le
 
 <div class="panel eff">
   <h2>투자 효율 랭킹</h2>
-  <div class="desc">같은 스탯이라도 일반 스킬과 100% 확정 치명 스킬은 효율이 다릅니다. 두 기준을 따로 비교합니다.</div>
+  <div class="desc">
+    같은 스탯이라도 일반 스킬과 100% 확정 치명 스킬은 효율이 다릅니다. 두 기준을 따로 비교합니다.<br>
+    <b style="color:var(--gold)">공격력 +10 효율</b>은 엔드 스펙 실측 예시인 <b>공격력 마석 +13 → 최종 공격력 +29</b>를 기준으로
+    공격력 +10을 최종 공격력 약 +22.3으로 환산한 <b>엔드 기준 추정치</b>입니다.
+  </div>
   <div class="eff-split">
     <div class="eff-col">
       <h3>일반 스킬 기준</h3>
@@ -281,6 +284,29 @@ footer{text-align:center;margin-top:30px;font-size:11px;color:var(--gold-dim);le
   </div>
 </div>
 
+
+<div style="margin:0 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:11.5px;line-height:1.65;color:var(--muted)">
+  <b style="color:var(--gold)">※ 보스 수치 안내</b><br>
+  현재 실측이 확인되지 않은 보스의 방어력·피해내성·무기피해내성 등은 <b style="color:var(--text)">추정값</b>이 포함되어 있습니다.
+  실제 보스 수치에 따라 특히 <b style="color:var(--text)">무기 피해 증폭·관통·피해 증폭의 실제 효율은 조금씩 달라질 수 있습니다.</b>
+  검증 가능한 실험/실측 자료가 확인되는 대로 보스 프리셋을 추가하고 수치를 업데이트할 예정입니다.
+</div>
+
+<div style="margin:0 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:11.5px;line-height:1.65;color:var(--muted)">
+  <b style="color:var(--gold)">※ 무기 피해 증폭 계산 안내</b><br>
+  커뮤니티 연구 기준으로 무기 피해 증폭은 단순히 최종 데미지에 고정 비율로 곱하는 스탯이 아니라,
+  <b style="color:var(--text)">장비 총 공격력 쪽에 먼저 적용된 뒤 방어력 계산을 거치는 구조</b>로 보고 있습니다.
+  따라서 정확한 계산에는 장비 총 공격력·스킬계수·보스 방어력 등의 정보가 필요하지만,
+  게임에서 확인 가능한 최종 공격력만으로는 이를 정확히 분리하기 어렵습니다.<br>
+  현재 계산기의 무기 피해 증폭 효율은 <b style="color:var(--text)">간단 비교용 참고치</b>이며,
+  실제 효율은 장비 구성·스킬·보스 방어력에 따라 달라질 수 있습니다.<br>
+  <b style="color:var(--gold)">공격력 효율도 고정값이 아닙니다.</b>
+  공격력 증가가 최종 공격력에 반영되는 증폭률, 현재 총 공격력, 관통, 보스 방어력 등에 따라 실제 최종딜 효율이 달라질 수 있습니다.
+  계산기의 <b style="color:var(--text)">공격력 +10 효율</b>은 현재 확인된 엔드 스펙 실측 예시
+  <b style="color:var(--text)">공격력 +13 → 최종 공격력 +29</b>를 기준으로 환산한 <b style="color:var(--text)">엔드 기준 추정치</b>입니다.
+  캐릭터 스펙에 따라 실제 값은 달라질 수 있습니다.<br>
+  검증 가능한 실험 자료가 추가되면 계산식과 프리셋을 계속 보완할 예정입니다.
+</div>
 
 <div class="panel speed-panel">
   <h2>전투속도 캡 체크</h2>
@@ -338,7 +364,8 @@ footer{text-align:center;margin-top:30px;font-size:11px;color:var(--gold-dim);le
   <div id="speedCaps" class="cap-list"></div>
   <div class="speed-foot">
     ※ 전투속도 증가 수치는 캐릭터 정보창에 더해지는 %p 기준으로 합산합니다. 같은 ‘질풍의 권능’끼리는 중복 합산하지 않습니다.<br>
-    ※ 수호성 전장의 깃발은 25레벨 특화의 전투속도 +10%p 기준, 검성 돌격 자세 +20%p, 살성 신속의 계약은 기본 +20%p / 20레벨 4특화 포함 +30%p, 궁성 광풍은 기본 +7%p, 호법성 질풍의 권능 +20%p를 선택할 수 있게 반영했습니다.<br>
+    ※ 궁성 고점 전속캡은 인증 실측 제보 기준 135.1%로 반영했습니다. 135.2%에서 돌파 확인 제보를 기준으로 한 값입니다.<br>
+  ※ 수호성 전장의 깃발은 이번 패치 기준 전투속도 +15%p, 검성 돌격 자세 +20%p, 살성 신속의 계약은 기본 +20%p / 20레벨 4특화 포함 +30%p, 궁성 광풍은 기본 +7%p, 호법성 질풍의 권능 +20%p를 선택할 수 있게 반영했습니다.<br>
     ※ 마도성처럼 ‘특정 스킬 속도 증가’ 효과는 캐릭터 전투속도 수치와 별개이므로 공속캡 합산에서 제외합니다. 공속캡 자체는 스킬·특화·입력 방식에 따라 달라질 수 있습니다.<br><br>
     <b style="color:var(--gold-dim)">공속 관련 안내</b> — 수호성 외 직업의 공속 구조는 제가 직접 플레이하며 정확히 아는 부분이 많지 않아 디시인사이드·인벤 등의 공속 연구글과 실측 자료를 참고해 정리했습니다. 잘못된 수치나 추가로 확인된 공속캡·버프 정보가 있다면 아래 댓글로 남겨주세요. 자료를 확인하고 검토한 뒤 수정해서 다시 배포하겠습니다.
   </div>
@@ -349,7 +376,7 @@ footer{text-align:center;margin-top:30px;font-size:11px;color:var(--gold-dim);le
   <b>계산 방식</b> — 커뮤니티 실측 연구 기반.
   피해 증폭·PVE 피증·보스 피증은 하나로 합산 후 상대 피해 내성을 뺀 값이 곱해지고,
   파티 버프는 선택 시 <b>치유/호법 버프(피해 증폭 +25% · 강타 +5%)</b>, <b>수호성 격양 Lv.30(피해 증폭 +40%)</b>을 현재 스탯에 추가해 계산합니다. 두 버프를 동시에 켜면 피해 증폭은 합산 반영됩니다.<br>
-  전방·후방 피해 증폭은 선택한 방향과 실제 유지 비율(100%·90%·80%)을 가중 평균해 계산합니다. 예를 들어 <b>후방 90%</b>는 후방 판정 90% + 전방 판정 10%로 기대값을 계산합니다. 무기 피증은 실효 0.66배(상대 무피 내성 차감), 치명타 피해는 기본 150%에 치피증을 합산하고 상대 치피 내성을 차감해 계산합니다.
+  전방·후방 피해 증폭은 선택한 방향과 실제 유지 비율(100%·90%·80%·70%·60%·50%·40%)을 가중 평균해 계산합니다. 예를 들어 <b>후방 90%</b>는 후방 판정 90% + 전방 판정 10%로, <b>후방 60%</b>는 후방 60% + 전방 40%로 기대값을 계산합니다. 무기 피해 증폭은 현재 간단 비교를 위한 근사 방식으로 처리하며, 정확한 효율은 장비 총 공격력·스킬계수·보스 방어력에 따라 달라질 수 있습니다. 치명타 피해는 기본 150%에 치피증을 합산하고 상대 치피 내성을 차감해 계산합니다.
   치명타는 두 가지로 나눠 계산합니다. <b>일반 스킬</b>은 내 치명타 수치 − 상대 치명타 저항을 유효 치명타 수치로 보고 커뮤니티 실측 기반 근사식으로 발생 확률을 추정하되, <b>최대 80%</b>로 제한합니다. <b>100% 확정 치명 스킬</b>은 치명 발생률을 100%로 고정해 별도 계산하며, 이 경우 치명타 수치와 치명타 발생 저항은 해당 스킬의 기대값에 반영하지 않고 <b>상대 치피 내성은 그대로 적용</b>합니다.
   보스별 치명타 저항 수치는 아직 프리셋에 임의로 넣지 않았습니다. 정확한 실측값을 알고 있다면 상대 스탯의 "치명타 저항"에 직접 입력하세요.
   강타는 확률 2배, 다단 히트는 타당 5% 기대값으로 계산합니다.
@@ -375,9 +402,9 @@ footer{text-align:center;margin-top:30px;font-size:11px;color:var(--gold-dim);le
         <a href="https://forum.gamer.com.tw/Co.php?bsn=82913&amp;sn=11552" target="_blank">원본 연구글 3</a><br>
       <span class="src-desc">위 인벤 번역글의 원문 실험 자료</span></li>
     <li><a href="https://gall.dcinside.com/mgallery/board/view/?id=aion2&amp;no=750340" target="_blank">무기 피해 증폭에 대한 검증 — 아이온2 갤러리</a><br>
-      <span class="src-desc">무피증 실효 약 0.66배(곱연산) 실측의 출처</span></li>
+      <span class="src-desc">초기 무피증 효율 근사 실측 참고 자료. 이후 연구에서는 장비 공격력·방어력에 따라 효율이 달라질 수 있음</span></li>
     <li><a href="https://www.inven.co.kr/board/aion2/6444/1483" target="_blank">무기피해증폭의 효율? 1편 — 공격력에 대한 정확한 이해 — 인벤</a><br>
-      <span class="src-desc">무피증 효율이 캐릭터 스펙에 따라 달라진다는 분석 (0.66배는 근사치라는 점 참고)</span></li>
+      <span class="src-desc">무피증이 장비 공격력에 선적용되고 방어력 계산을 거쳐 스펙·대상에 따라 효율이 달라진다는 분석</span></li>
     <li><a href="https://gall.dcinside.com/mgallery/board/view/?id=aion2&amp;no=1717642" target="_blank">보스의 치명타 피해 내성 / 무기 피해 내성 테스트 — 아이온2 갤러리</a><br>
       <span class="src-desc">보스에 무피 내성·치피 내성이 붙기 시작했다는 실측 (카이시넬 10단 무피내성 약 20%, 치피내성 15%)</span></li>
     <li><a href="https://gall.dcinside.com/mgallery/board/view/?id=aion2&amp;no=1724014" target="_blank">초월 4단 막보스 기준 내성값/방깎 효율 체크 — 아이온2 갤러리</a><br>
@@ -391,9 +418,9 @@ footer{text-align:center;margin-top:30px;font-size:11px;color:var(--gold-dim);le
     <li><a href="https://www.inven.co.kr/board/aion2/6448/16354" target="_blank">검성 PVE 가이드 — 인벤</a> ·
         <a href="https://www.inven.co.kr/board/aion2/6449/4378" target="_blank">살성 전속 테스트 — 인벤</a> ·
         <a href="https://www.inven.co.kr/board/aion2/6451/8918" target="_blank">호법 질풍 테스트 — 인벤</a><br>
-      <span class="src-desc">돌격 자세 +20%, 신속의 계약 20레벨 실측 +30%, 질풍의 권능 +20% 전투속도 계산 근거</span></li>
+      <span class="src-desc">돌격 자세 +20%, 신속의 계약 20레벨 실측 +30%, 질풍의 권능 +20% 전투속도 계산 근거. 호법성 주요 전속캡은 인증 실측 제보를 반영해 90.5%로 고정</span></li>
     <li><a href="https://www.inven.co.kr/board/aion2/6438/18484" target="_blank">수호성 전장의 깃발 25레벨 공속 특화 논의 — 인벤</a><br>
-      <span class="src-desc">전장의 깃발 25레벨 특화 전투속도 +10% 적용 참고. 패치 시 최신 툴팁과 대조 필요</span></li>
+      <span class="src-desc">과거 공속 연구 참고 자료. 현재 계산기는 이번 패치 변경값인 전투속도 +15%p를 적용</span></li>
   </ul>
   <span class="src-desc">※ 챕터1 신규 던전(타락한 데바의 성 · 심연의 뿔암굴) 프리셋은 커뮤니티 실측/분석에서 현재 보스 강타 저항을 약 30%로 보는 사례를 반영한 추정치이며, 보스·난이도별 실제 수치는 다를 수 있습니다.</span>
 </div>
@@ -476,11 +503,11 @@ const SPEED_CAPS={
   "궁성":[
     {name:"초기 주요 구간",min:88.1,max:88.1,note:"스킬별 체감 차이 있음"},
     {name:"100%대 추가 제보",min:101.0,max:101.0,note:"특정 스킬/세팅 기준 참고"},
-    {name:"고점 다음 단계",min:131.7,max:136.6,note:"131.6 미돌파 · 136.6 돌파 확인"}
+    {name:"고점 전속캡",min:135.1,max:135.1,note:"인증 실측 제보 기준 135.1% 고정 · 135.2%에서 돌파 확인"}
   ],
   "호법성":[
     {name:"암격쇄 계열",min:82.5,max:82.5,note:"실측 참고"},
-    {name:"관통쇄 계열",min:90.5,max:92.0,note:"90~92%대"},
+    {name:"관통쇄 계열",min:90.5,max:90.5,note:"인증 실측 기준 90.5% 고정"},
     {name:"고점 다음 단계",min:118.5,max:118.5,note:"질풍 포함 고점 기준"}
   ],
   "치유성":[
@@ -507,7 +534,7 @@ const SPEED_CAPS={
 const SPEED_BUFFS={
   "수호성":[
     {key:"none",label:"사용 안 함 · +0%p",value:0,note:""},
-    {key:"flag25",label:"전장의 깃발 25레벨 특화 · +10%p",value:10,note:"25레벨 특화 기준. 유지 시간 동안 전투속도 증가."}
+    {key:"flag25",label:"전장의 깃발 · +15%p",value:15,note:"이번 패치 변경값 기준. 유지 시간 동안 전투속도 +15%p."}
   ],
   "검성":[
     {key:"none",label:"사용 안 함 · +0%p",value:0,note:""},
@@ -917,6 +944,9 @@ function snap(){
 }
 function renderEff(hostId,s,baseResult,critMode){
  const tests=[
+  ["공격력 +10","atk",22.3],
+  ["공격력 +15","atk",33.45],
+  ["공격력 +20","atk",44.6],
   ["전방 피해 증폭 +1%p","frontAmp",1],["후방 피해 증폭 +1%p","backAmp",1],["피해 증폭 +1%p","amp",1],
   ["강타 +1%p","smite",1],["치명타 피해 증폭 +1%p","critAmp",1],["무기 피해 증폭 +1%p","wAmp",1],
   ["다단 히트 적중 +1%p","multi",1],["치명타 수치 +100","critStat",100],["관통 +100","pen",100]
